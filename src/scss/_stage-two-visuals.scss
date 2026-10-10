@@ -1,0 +1,42 @@
+.civilization-tab {
+  background: #102d37;
+}
+
+.civilization-tab > img {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform .25s ease;
+}
+
+.civilization-tab::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(5, 29, 40, .96) 0%, rgba(7, 31, 40, .62) 48%, rgba(9, 35, 45, .12) 100%);
+  mix-blend-mode: normal;
+  pointer-events: none;
+}
+
+.civilization-tab.is-complete {
+  background: #123c3d;
+}
+
+.civilization-tab.is-complete::after {
+  background: linear-gradient(0deg, rgba(10, 67, 68, .96) 0%, rgba(10, 50, 54, .48) 55%, rgba(10, 50, 54, .08) 100%);
+}
+
+.civilization-tab > :not(img) {
+  position: relative;
+  z-index: 2;
+}
+
+.civilization-tab:hover > img {
+  transform: scale(1.04);
+}

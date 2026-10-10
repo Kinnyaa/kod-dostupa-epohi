@@ -1,0 +1,27 @@
+.artifact-icon {
+  display: block;
+  width: 58px;
+  height: 58px;
+  color: #512c16;
+}
+
+.artifact.collected > span {
+  background: linear-gradient(145deg, #f4d28c, #bd7936);
+}
+
+.artifact.collected > span .artifact-icon {
+  width: 64px;
+  height: 64px;
+}
+
+.stage-artifact__icon .artifact-icon {
+  width: 50px;
+  height: 50px;
+  color: #5b3214;
+}
+
+.passport-artifacts article.is-collected .artifact-icon,
+.results-artifacts article.is-earned .artifact-icon,
+.era-stop__artifact.is-collected .artifact-icon {
+  color: #8b4d20;
+}

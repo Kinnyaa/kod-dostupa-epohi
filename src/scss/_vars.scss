@@ -1,0 +1,56 @@
+$white: #fff;
+$light-gray: #efefef;
+$soft-gray: #ececec;
+$gray: #cacaca;
+$table-background: #6d6d6d;
+$error-red: #ff0000;
+$error-red-prehover: #ff7a7a;
+$orange-btn: #ff9900;
+$green-confirm: #009e1a;
+$link-color: #0d6efd;
+$link-color--hover: #003f9c;
+$dark-gray: #222222;
+$dark-input: #414141;
+$dark: #212529;
+$black: #000;
+
+
+$background: #F8F8F8;
+$footer-background: #1B1C21;
+$main-text-color: #1B1C21;
+$menu-text-color: #7E7E82 ;
+$border-color: #B8FFEC;
+
+
+$header-background:   radial-gradient(
+    ellipse at 50% 0%,
+    rgba(180, 230, 220, 0.14) 0%,
+    rgba(180, 230, 220, 0.05) 35%,
+    transparent 70%
+  ),
+  linear-gradient(
+    90deg,
+    rgba(1, 41, 38, 1) 1%,
+    rgba(4, 89, 84, 1) 100%
+  ),
+    url('/assets/roman-temple.jpg');
+$header-background-size: cover;
+$header-background-position: center;
+$header-background-repeat: no-repeat;
+$title-color: #F1D39A;
+
+
+$sidebar-width: 300px;
+$sidebar-bg: #061923;
+$sidebar-text: #f5eee0;
+$sidebar-muted: #aab8c4;
+$sidebar-active: #163646;
+$sidebar-accent: #35bfc4;
+$gold: #f1d39a;
+
+$content-bg: #f5ecda;
+$content-text: #172333;
+$content-muted: #6e6b68;
+$content-accent: #8e321e;
+$content-border: #dfc9a8;
+$content-shadow: 0 8px 25px rgba(78, 48, 25, 0.12);

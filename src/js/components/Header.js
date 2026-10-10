@@ -1,0 +1,1 @@
+export const Header = ({ score }) => `<header class="header"><div class="header__title"><h1>Код доступа: Эпохи</h1><p class="header__title_under">История · Числа · Технологии · Ты в игре</p></div><div class="header__actions"><strong>${score} баллов</strong><button class="reset-button" type="button" data-action="reset">Сбросить прогресс</button></div></header>`;

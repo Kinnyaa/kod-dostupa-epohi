@@ -1,0 +1,44 @@
+.results-page { display: grid; gap: 20px; }
+.results-page__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 22px; }
+.results-page__status { display: flex; align-items: center; gap: 11px; min-width: 260px; padding: 14px 16px; color: #6c5435; border: 1px solid #b9aa92; border-radius: 10px; background: #e9e3d8; }
+.results-page__status.is-success { color: #173f3d; border-color: #bb8c39; background: #efd595; }
+.results-page__status > .ui-icon { width: 38px; height: 38px; }
+.results-page__status span, .results-page__status small, .results-page__status strong { display: block; }
+.results-page__status small { margin-bottom: 2px; }
+.result-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.result-metrics article { display: grid; grid-template-columns: 42px 1fr; align-items: center; padding: 15px; border: 1px solid #ccb58d; border-radius: 10px; background: #fff8e9; }
+.result-metrics article > span { grid-row: 1 / 3; color: #8d4c22; }
+.result-metrics .ui-icon { width: 32px; height: 32px; }
+.result-metrics strong { font-size: 25px; }
+.result-metrics strong small { font-size: 13px; }
+.result-metrics p { margin: 0; color: #70685e; }
+.results-block { overflow: hidden; border: 1px solid #cbb184; border-radius: 12px; background: rgba(255, 249, 237, .91); }
+.results-block > header { display: flex; justify-content: space-between; align-items: center; padding: 15px 18px; color: #f7e8ca; background: linear-gradient(100deg, #163844, #285e60); }
+.results-block > header p, .results-block > header h2 { margin: 0; }
+.results-block > header h2 { font-size: 23px; }
+.results-block > header > strong { font-size: 21px; }
+.results-artifacts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: #d5c09e; }
+.results-artifacts article { display: grid; justify-items: center; align-content: center; min-height: 135px; padding: 12px; background: #fffaf0; text-align: center; }
+.results-artifacts article.is-locked { color: #79736a; background: #eae5dc; }
+.results-artifacts .artifact-icon, .results-artifacts article > .ui-icon { width: 46px; height: 46px; margin-bottom: 7px; }
+.results-artifacts span, .results-artifacts strong, .results-artifacts small { display: block; }
+.results-artifacts small { color: #746d64; }
+.results-achievements { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+.results-achievements article, .results-empty { display: flex; align-items: center; gap: 11px; padding: 12px; border: 1px solid #cbbfa9; border-radius: 8px; background: #eeeae2; }
+.results-achievements article.is-earned { color: #173f3d; border-color: #b98b3d; background: #f0d69f; }
+.results-achievements .ui-icon, .results-empty .ui-icon { flex: 0 0 auto; width: 31px; height: 31px; }
+.results-achievements span, .results-achievements strong, .results-achievements small, .results-empty span, .results-empty strong, .results-empty small { display: block; }
+.results-achievements small, .results-empty small { margin-top: 2px; color: #6e675e; }
+.recovery-overview > p { margin: 14px 16px 4px; }
+.recovery-overview > div { display: grid; gap: 8px; padding: 12px 16px 16px; }
+.recovery-overview button { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 14px; border: 1px solid #c6a576; border-radius: 8px; background: #fffaf0; cursor: pointer; text-align: left; }
+.recovery-overview button span, .recovery-overview button strong, .recovery-overview button small { display: block; }
+.recovery-overview button small { margin-top: 3px; color: #8e321e; }
+.recovery-overview button > .ui-icon { flex: 0 0 auto; width: 23px; height: 23px; }
+.results-recovery-form { margin: 0; padding: 0 16px 16px; }
+.results-page__actions { display: flex; justify-content: flex-end; gap: 10px; }
+.results-page__actions button { min-height: 48px; padding: 9px 18px; }
+.results-print-card { display: none; }
+@media (max-width: 900px) { .result-metrics, .results-artifacts { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .results-page__header, .results-page__actions { align-items: stretch; flex-direction: column; } .results-page__status { min-width: 0; } .result-metrics, .results-artifacts, .results-achievements { grid-template-columns: 1fr; } }
+@media print { .results-page > :not(.results-print-card) { display: none !important; } .results-print-card { display: block !important; } }

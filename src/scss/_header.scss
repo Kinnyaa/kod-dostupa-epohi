@@ -1,0 +1,16 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 166px;
+  padding: 30px clamp(22px, 5vw, 70px);
+  color: #f3e3c6;
+  background:
+    linear-gradient(90deg, rgba(3, 42, 42, .96), rgba(6, 89, 83, .82)),
+    url('../assets/roman-temple.jpg') center 38% / cover;
+}
+.header__title { display: grid; gap: 7px; h1 { margin: 0; color: #f1d39a; font: 700 clamp(30px, 5vw, 52px)/1 Georgia, serif; } }
+.header__kicker { font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+.header__title_under { font-size: 14px; letter-spacing: .15em; text-transform: uppercase; }
+.header__status { display: grid; justify-items: end; gap: 12px; > span { color: #fff; font-weight: 800; } }
+@media (max-width: 600px) { .header { align-items: flex-start; min-height: 145px; padding: 24px 18px; } .header__title_under { display: none; } .header__status { font-size: 13px; } }

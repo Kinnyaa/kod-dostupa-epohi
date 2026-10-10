@@ -1,0 +1,94 @@
+.result-card-modal {
+  width: min(920px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  overflow: hidden;
+  color: #102434;
+  border: 1px solid #b88a45;
+  border-radius: 14px;
+  background: #eee2cf;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .5);
+}
+
+.result-card-modal::backdrop {
+  background: rgba(3, 18, 26, .78);
+  backdrop-filter: blur(4px);
+}
+
+.result-card-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  color: #f5e4c2;
+  background: linear-gradient(100deg, #102f3b, #24575b);
+}
+
+.result-card-modal__header p,
+.result-card-modal__header h2 {
+  margin: 0;
+}
+
+.result-card-modal__header p {
+  color: #d8bc82;
+  font: 700 11px notosans, sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.result-card-modal__header h2 {
+  font: 400 27px "Forum", Georgia, serif;
+}
+
+.result-card-modal__close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: #f5e4c2;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-size: 28px;
+}
+
+.result-card-modal__body {
+  max-height: calc(100vh - 180px);
+  overflow: auto;
+  padding: 20px;
+}
+
+.result-card-modal__card {
+  display: block !important;
+  margin: 0;
+}
+
+.result-card-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #c9b18c;
+  background: #f7ecda;
+}
+
+.result-card-modal__actions button {
+  min-height: 46px;
+  padding: 8px 18px;
+}
+
+@media (max-width: 600px) {
+  .result-card-modal { width: calc(100vw - 16px); max-height: calc(100vh - 16px); }
+  .result-card-modal__body { padding: 10px; }
+  .result-card-modal__actions { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
+@media print {
+  body:has(.result-card-modal[open]) > :not(.result-card-modal) { display: none !important; }
+  .result-card-modal[open] { position: static; display: block; width: 100%; max-height: none; border: 0; box-shadow: none; }
+  .result-card-modal__header, .result-card-modal__actions { display: none !important; }
+  .result-card-modal__body { max-height: none; overflow: visible; padding: 0; }
+}
