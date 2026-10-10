@@ -1,4 +1,4 @@
-import { loadState, saveState } from './services/storage';
+import { clearState, loadState, saveState } from './services/storage';
 
 export const ACHIEVEMENT_DEFINITIONS = [
   { id: 'archive-keeper', title: 'Архивист эпох', description: 'Засчитано задание каждой из четырёх цивилизаций' },
@@ -26,6 +26,7 @@ const initialState = {
   schemaVersion: 3,
   hasStarted: false,
   teamName: '',
+  participants: [],
   currentStage: 1,
   unlockedStage: 1,
   score: 0,
@@ -48,9 +49,19 @@ state = { ...state, achievements: achievementIdsFor(state) };
 
 export const getState = () => state;
 
-export const registerTeam = (teamName) => updateState({
+export const registerTeam = (teamName, participants = []) => updateState({
   teamName: String(teamName).trim().slice(0, 24),
+  participants: (Array.isArray(participants) ? participants : [])
+    .map((name) => String(name).trim().slice(0, 40))
+    .filter(Boolean)
+    .slice(0, 2),
 });
+
+export const resetProgress = () => {
+  clearState();
+  state = { ...initialState, answers: {}, attempts: {}, completedQuestions: [], openedHints: [], artifacts: [], achievements: [], timers: {}, activeQuestionByStage: {}, recoveredQuestions: [], participants: [] };
+  return state;
+};
 
 export const startGame = () => updateState({
   hasStarted: true,
@@ -93,8 +104,10 @@ export const completeQuestion = (question) => {
   const attemptPenalty = attempts === 2 ? (practical ? 2 : 1) : attempts >= 3 ? (practical ? 4 : 2) : 0;
   const hintPenalty = state.openedHints.includes(question.id) ? (practical ? 2 : 1) : 0;
   const earned = Math.max(practical ? 2 : 1, question.points - attemptPenalty - hintPenalty);
+  const optionalCompleted = state.completedQuestions.filter((id) => ['egypt-02', 'egypt-03', 'babylon-02', 'babylon-03', 'rome-03', 'rus-02', 'rus-03'].includes(id)).length;
+  const awarded = question.required === false && optionalCompleted >= 5 ? 0 : earned;
   return updateState({
-    score: Math.min(100, state.score + earned),
+    score: Math.min(100, state.score + awarded),
     completedQuestions: [...state.completedQuestions, question.id],
   });
 };

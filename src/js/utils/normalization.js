@@ -33,6 +33,7 @@ export const normalizeByType = (type, value) => {
     case 'roman': return normalizeRoman(value);
     case 'binary': return normalizeBinary(value);
     case 'listOfIntegers': return normalizeIntegerList(value);
+    case 'multiChoice': return normalizeIntegerList(value);
     case 'singleChoice':
     case 'text':
     default: return normalizeText(value);

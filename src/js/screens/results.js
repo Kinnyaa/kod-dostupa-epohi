@@ -2,7 +2,7 @@ import { ACHIEVEMENT_DEFINITIONS } from '../state';
 import { artifactImage, icon } from '../components/icons';
 import { createQuestionComponent } from '../components/question';
 import { validateAnswer } from '../utils/validators';
-import { recoverQuestion } from '../state';
+import { completeQuestion, openHint, recoverQuestion, registerAttempt, resetProgress, updateAnswer } from '../state';
 import { openResultCardModal } from '../components/result-card-modal';
 
 const artifacts = [
@@ -29,10 +29,13 @@ export const renderResultsPage = ({ root, state, questionBank, onContinue, onSta
   const finished = state.artifacts.length >= 5;
   const passed = finished && state.score >= 60;
   const status = passed ? 'Полный допуск получен' : finished ? 'Требуется восстановление' : 'Экспедиция продолжается';
+  const participants = (state.participants || []).map(escapeHtml);
   const recoverable = questionBank.questions.filter((question) => state.completedQuestions.includes(question.id)
     && !state.recoveredQuestions.includes(question.id)
     && !['rubricText', 'rubricCase'].includes(question.type)
     && pointsLost(state, question) > 0);
+  const optionalQuestions = questionBank.questions.filter((question) => question.required === false && question.stage <= state.unlockedStage);
+  const optionalComplete = optionalQuestions.filter(({ id }) => state.completedQuestions.includes(id)).length;
 
   root.innerHTML = `<section class="quest-card results-page" aria-labelledby="results-title">
     <header class="results-page__header"><div><p class="stage-kicker">Личный архив</p><h1 id="results-title" tabindex="-1">Результаты команды</h1><p class="eyebrow">${escapeHtml(state.teamName || 'Хранители времени')}</p></div><div class="results-page__status ${passed ? 'is-success' : ''}">${passed ? icon('status-reward') : icon(finished ? 'status-hint' : 'status-time')}<span><small>Текущий статус</small><strong>${status}</strong></span></div></header>
@@ -43,15 +46,54 @@ export const renderResultsPage = ({ root, state, questionBank, onContinue, onSta
 
     <section class="results-block"><header><div><p class="stage-kicker">Награды</p><h2>Достижения</h2></div><strong>${state.achievements.length} / ${ACHIEVEMENT_DEFINITIONS.length}</strong></header><div class="results-achievements">${ACHIEVEMENT_DEFINITIONS.map((achievement) => { const earned = state.achievements.includes(achievement.id); return `<article class="${earned ? 'is-earned' : 'is-locked'}">${icon(earned ? 'status-reward' : 'status-locked')}<span><strong>${achievement.title}</strong><small>${achievement.description}</small></span></article>`; }).join('')}</div></section>
 
+    <section class="results-block optional-challenges"><header><div><p class="stage-kicker">Дополнительные баллы</p><h2>Задания цивилизаций</h2></div><strong>${optionalComplete} / 7</strong></header><p>Можно выполнить все задания. В итоговый счёт входят пять лучших результатов — до 25 дополнительных баллов.</p><div class="optional-challenges__list">${optionalQuestions.map((question) => { const done = state.completedQuestions.includes(question.id); return `<button type="button" data-optional-id="${question.id}" ${done ? 'disabled' : ''}><span><strong>${question.prompt}</strong><small>${done ? 'Выполнено' : `Награда: до ${question.points} баллов`}</small></span>${icon(done ? 'status-complete' : 'navigation-forward')}</button>`; }).join('') || '<p>Дополнительные задания откроются после изучения цивилизаций.</p>'}</div><form class="answer-form optional-challenges__form" hidden></form></section>
+
     <section class="results-block recovery-overview"><header><div><p class="stage-kicker">Повторная попытка</p><h2>Восстановление баллов</h2></div><strong>${recoverable.length}</strong></header>${recoverable.length ? `<p>Выберите задание, исправьте ответ и восстановите потерянные баллы.</p><div>${recoverable.map((question) => `<button type="button" data-recover-id="${question.id}"><span><strong>${question.prompt}</strong><small>Можно вернуть баллов: ${pointsLost(state, question)}</small></span>${icon('navigation-forward')}</button>`).join('')}</div><form class="answer-form results-recovery-form" hidden></form>` : `<div class="results-empty">${icon('status-complete')}<span><strong>Заданий для восстановления нет</strong><small>${finished ? 'Все доступные баллы уже учтены.' : 'Они появятся здесь после прохождения заданий с подсказками или повторными попытками.'}</small></span></div>`}</section>
 
-    <article class="print-card results-print-card"><header><div><p>НИИ Времени · отчёт экспедиции</p><h2>Карточка команды</h2></div><strong>«${escapeHtml(state.teamName || 'Хранители времени')}»</strong></header><section><h3>Итоговый статус</h3><p>${status}</p></section><section><h3>Результаты</h3><p>Баллы: ${state.score} из 100 · Этапы: ${completedStages} из 5 · Попытки: ${attempts} · Подсказки: ${state.openedHints.length}</p></section><section><h3>Артефакты</h3><p>${artifacts.filter(([id]) => state.artifacts.includes(id)).map(([, , title]) => title).join(' · ') || 'Пока не собраны'}</p></section><section><h3>Достижения</h3><p>${ACHIEVEMENT_DEFINITIONS.filter(({ id }) => state.achievements.includes(id)).map(({ title }) => title).join(' · ') || 'Пока не открыты'}</p></section><footer><span>Этапов пройдено: ${completedStages} из 5</span><strong>${state.score} / 100</strong></footer></article>
+    <article class="print-card results-print-card"><header><div><p>НИИ Времени · отчёт экспедиции</p><h2>Карточка команды</h2></div><strong>«${escapeHtml(state.teamName || 'Хранители времени')}»</strong></header><section><h3>Участники команды</h3><p>${participants.length ? participants.join(' · ') : 'Имена не указаны'}</p></section><section><h3>Итоговый статус</h3><p>${status}</p></section><section><h3>Результаты</h3><p>Баллы: ${state.score} из 100 · Этапы: ${completedStages} из 5 · Попытки: ${attempts} · Подсказки: ${state.openedHints.length}</p></section><section><h3>Артефакты</h3><p>${artifacts.filter(([id]) => state.artifacts.includes(id)).map(([, , title]) => title).join(' · ') || 'Пока не собраны'}</p></section><section><h3>Достижения</h3><p>${ACHIEVEMENT_DEFINITIONS.filter(({ id }) => state.achievements.includes(id)).map(({ title }) => title).join(' · ') || 'Пока не открыты'}</p></section><footer><span>Этапов пройдено: ${completedStages} из 5</span><strong>${state.score} / 100</strong></footer></article>
 
-    <div class="results-page__actions"><button class="stage-nav-button results-continue" type="button">${icon('navigation-back')} Продолжить игру</button><button class="primary-button results-print" type="button">${icon('navigation-passport')} Получить карточку</button></div>
+    <div class="results-page__actions"><button class="stage-nav-button results-reset" type="button">Сбросить прогресс</button><button class="stage-nav-button results-continue" type="button">${icon('navigation-back')} Продолжить игру</button><button class="primary-button results-print" type="button">${icon('navigation-passport')} Получить карточку</button></div>
   </section>`;
 
   root.querySelector('.results-continue')?.addEventListener('click', onContinue);
+  root.querySelector('.results-reset')?.addEventListener('click', () => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'reset-dialog';
+    dialog.innerHTML = `<div><p class="stage-kicker">Новое прохождение</p><h2>Сбросить весь прогресс?</h2><p>Название команды, участники, ответы, баллы, артефакты и достижения будут удалены.</p><div><button class="stage-nav-button reset-cancel" type="button">Отмена</button><button class="primary-button reset-confirm" type="button">Сбросить прогресс</button></div></div>`;
+    document.body.append(dialog);
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+    dialog.querySelector('.reset-cancel').addEventListener('click', () => dialog.close());
+    dialog.querySelector('.reset-confirm').addEventListener('click', () => { resetProgress(); dialog.close(); onStateChange(); });
+    dialog.showModal();
+    dialog.querySelector('.reset-cancel').focus();
+  });
   root.querySelector('.results-print')?.addEventListener('click', () => openResultCardModal(root.querySelector('.results-print-card')));
+  root.querySelectorAll('[data-optional-id]').forEach((button) => button.addEventListener('click', () => {
+    const question = questionBank.questions.find(({ id }) => id === button.dataset.optionalId);
+    const form = root.querySelector('.optional-challenges__form');
+    form.hidden = false;
+    let ui;
+    const showHint = () => { ui.hint.innerHTML = `<strong>Подсказка:</strong> ${question.hint}`; ui.hint.hidden = false; openHint(question.id); };
+    ui = createQuestionComponent({
+      container: form,
+      question,
+      initialValue: state.answers[question.id] || '',
+      onChange: (value) => updateAnswer(question.id, value),
+      onHint: showHint,
+      onSubmit: (value) => {
+        const result = validateAnswer(question, value);
+        if (!result.valid) { form.dataset.state = 'error'; ui.status.textContent = result.message; return; }
+        updateAnswer(question.id, value);
+        const attempt = registerAttempt(question.id);
+        if (result.correct) { completeQuestion(question); onStateChange(); return; }
+        if (attempt === 1) showHint();
+        form.dataset.state = 'error';
+        ui.status.textContent = attempt >= 2 ? question.errorExplanation : 'Ответ неверный. Открыта подсказка.';
+      },
+    });
+    ui.status.textContent = question.prompt;
+    ui.control?.focus();
+  }));
   root.querySelectorAll('[data-recover-id]').forEach((button) => button.addEventListener('click', () => {
     const question = questionBank.questions.find(({ id }) => id === button.dataset.recoverId);
     const form = root.querySelector('.results-recovery-form');

@@ -9,6 +9,17 @@ const inputConfig = {
 };
 
 const createInputControl = (question, initialValue) => {
+  if (question.type === 'multiChoice') {
+    const selected = Array.isArray(initialValue) ? initialValue.map(String) : String(initialValue || '').split(/[\s,;]+/).filter(Boolean);
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'choice-list';
+    fieldset.innerHTML = `<legend class="sr-only">Выберите все подходящие ответы</legend>${question.options.map((option) => `
+      <label class="choice-option">
+        <input type="checkbox" name="answer" value="${String(option).replace(/"/g, '&quot;')}" ${selected.includes(String(option)) ? 'checked' : ''}>
+        <span>${option}</span>
+      </label>`).join('')}`;
+    return fieldset;
+  }
   if (question.type === 'singleChoice') {
     const fieldset = document.createElement('fieldset');
     fieldset.className = 'choice-list';
@@ -73,12 +84,15 @@ export const createQuestionComponent = ({ container, question, initialValue = ''
   container.append(label, control, submit, hintButton, help, status, hint);
 
   const getValue = () => {
+    if (question.type === 'multiChoice') {
+      return [...container.querySelectorAll('input[name="answer"]:checked')].map(({ value }) => value);
+    }
     if (question.type === 'singleChoice') {
       return container.querySelector('input[name="answer"]:checked')?.value || '';
     }
     return control.value;
   };
-  const changeEvent = question.type === 'singleChoice' ? 'change' : 'input';
+  const changeEvent = ['singleChoice', 'multiChoice'].includes(question.type) ? 'change' : 'input';
   control.addEventListener(changeEvent, () => onChange(getValue()));
   container.addEventListener('submit', (event) => { event.preventDefault(); onSubmit(getValue()); });
   hintButton.addEventListener('click', () => onHint());

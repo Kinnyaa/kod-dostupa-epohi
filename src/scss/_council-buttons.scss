@@ -1,0 +1,39 @@
+.council-form > .primary-button {
+  color: #fff4d7;
+  border-color: #9b783f;
+  background: linear-gradient(135deg, #214d58 0%, #123743 52%, #082631 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(231, 190, 104, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    0 4px 10px rgba(6, 31, 40, .22);
+  text-shadow: 0 1px 1px #031b23;
+}
+
+.council-form > .primary-button > span:last-child {
+  color: #edc97e;
+}
+
+.council-form > .primary-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow:
+    inset 0 0 0 2px rgba(240, 202, 122, .34),
+    0 6px 13px rgba(6, 31, 40, .28);
+}
+
+.council-form > .hint-button {
+  color: #183842;
+  border-color: #b08a4e;
+  background: linear-gradient(135deg, #f8edda, #e7c98f);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, .46),
+    0 3px 8px rgba(79, 55, 25, .12);
+}
+
+.council-form > .hint-button:hover {
+  background: linear-gradient(135deg, #fff8e9, #dfbb77);
+}
+
+.council-form > .hint-button[aria-expanded="true"] {
+  border-color: #876126;
+  background: linear-gradient(135deg, #efd9b0, #d9ad5d);
+}

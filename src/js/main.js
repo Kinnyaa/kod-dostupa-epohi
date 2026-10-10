@@ -25,6 +25,25 @@ const appShell = document.querySelector('.app-shell');
 const topbar = document.querySelector('.topbar');
 let cleanupScreen = () => {};
 let timerInterval = null;
+const expeditionExpired = (state) => state.timers.expedition?.startedAt
+  && Date.now() - state.timers.expedition.startedAt >= 90 * 60 * 1000;
+
+const applyExpeditionLimit = () => {
+  const state = getState();
+  const expired = expeditionExpired(state);
+  const existingNotice = document.querySelector('.time-limit-notice');
+  if (!expired || currentView !== 'game' || state.currentStage === 6) { existingNotice?.remove(); return; }
+  if (existingNotice) {
+    screenRoot.querySelectorAll('form input, form textarea, form button, .blitz-start, [data-blitz-answer]').forEach((control) => { control.disabled = true; });
+    return;
+  }
+  const notice = document.createElement('aside');
+  notice.className = 'time-limit-notice';
+  notice.setAttribute('role', 'alert');
+  notice.innerHTML = `${icon('status-time')}<div><strong>Время экспедиции истекло</strong><p>Ответы и прогресс сохранены. Перейдите в результаты, чтобы посмотреть итог команды.</p></div>`;
+  screenRoot.prepend(notice);
+  screenRoot.querySelectorAll('form input, form textarea, form button, .blitz-start, [data-blitz-answer]').forEach((control) => { control.disabled = true; });
+};
 const viewNames = ['game', 'map', 'passport', 'results'];
 const viewFromLocation = () => {
   const requested = window.location.hash.replace('#', '');
@@ -46,6 +65,7 @@ const hydrateStaticIcons = () => {
   const replacements = [
     ['.player__mark', 'status-reward', 'player__mark'],
     ['.score>span', 'status-score', 'score-icon'],
+    ['.header-timer__icon', 'status-time', 'header-timer__icon'],
     ['.sidebar__link:nth-child(1)>span', 'navigation-home', 'sidebar-icon'],
     ['.sidebar__link:nth-child(2)>span', 'navigation-timeline', 'sidebar-icon'],
     ['.sidebar__link:nth-child(3)>span', 'navigation-passport', 'sidebar-icon'],
@@ -84,8 +104,8 @@ function renderApp() {
     appShell.classList.add('app-shell--welcome');
     renderStartScreen({
       root: screenRoot,
-      onStart: (teamName) => {
-        registerTeam(teamName);
+      onStart: ({ teamName, participants }) => {
+        registerTeam(teamName, participants);
         renderApp();
       },
     });
@@ -113,7 +133,7 @@ function renderApp() {
   renderAchievementPanel(state);
   renderTimerPanel(state);
   if (timerInterval) window.clearInterval(timerInterval);
-  timerInterval = window.setInterval(() => renderTimerPanel(getState()), 1000);
+  timerInterval = window.setInterval(() => { renderTimerPanel(getState()); applyExpeditionLimit(); }, 1000);
   renderScore();
 
   sidebarLinks.forEach((link) => {
@@ -154,6 +174,7 @@ function renderApp() {
   else if (state.currentStage === 5) cleanupScreen = renderStageFive(shared) || (() => {});
   else if (state.currentStage === 6) renderFinalResults(shared);
   else renderPlaceholderScreen({ root: screenRoot, screenId: state.currentStage, unlockedStage: state.unlockedStage, score: state.score });
+  applyExpeditionLimit();
 }
 
 hydrateStaticIcons();

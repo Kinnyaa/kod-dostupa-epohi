@@ -1,0 +1,45 @@
+.timer.is-warning {
+  color: #6a4309;
+  border-color: #d2a248;
+  background: #fff0c7;
+}
+
+.timer.is-urgent {
+  color: #752317;
+  border-color: #bd624c;
+  background: #f6d8cd;
+}
+
+.timer.is-expired {
+  color: #f8e5cc;
+  border-color: #9d4b39;
+  background: #55271f;
+}
+
+.time-limit-notice {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 14px;
+  padding: 15px 18px;
+  color: #fff3df;
+  border: 1px solid #b76b50;
+  border-radius: 11px;
+  background: linear-gradient(110deg, #6f2b20, #3c2423);
+}
+
+.time-limit-notice .ui-icon {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+}
+
+.time-limit-notice strong,
+.time-limit-notice p {
+  display: block;
+  margin: 0;
+}
+
+.time-limit-notice p {
+  margin-top: 3px;
+}

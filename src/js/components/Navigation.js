@@ -9,7 +9,7 @@ export const renderTimeline = ({ container, currentStage, unlockedStage, onNavig
     const locked = stage.id > unlockedStage;
     return `<li class="${complete ? 'is-complete' : ''} ${current ? 'is-current' : ''} ${locked ? 'is-locked' : ''}">
       <button type="button" data-stage="${stage.id}" ${locked ? 'disabled' : ''} ${current ? 'aria-current="step"' : ''} aria-label="Этап ${stage.id}: ${stage.title}${locked ? '. Недоступен' : ''}">
-        <span class="timeline__marker" aria-hidden="true">${complete ? icon('status-complete') : stage.id}</span>
+        <span class="timeline__marker" aria-hidden="true">${complete && !current ? icon('status-complete') : stage.id}</span>
         <span class="timeline__label"><small>Этап ${stage.id}</small><b>${stage.shortTitle}</b></span>
       </button>
     </li>`;
@@ -84,9 +84,16 @@ export const renderAchievementPanel = ({ achievements = [], attempts = {}, opene
 };
 
 export const renderTimerPanel = ({ timers = {}, completedQuestions = [], currentStage }) => {
-  const label = document.querySelector('#timer-label');
-  const time = document.querySelector('.timer time');
-  if (!label || !time) return;
+  const labels = [...document.querySelectorAll('#timer-label, #header-timer-label')];
+  const times = [...document.querySelectorAll('.timer time, .header-timer time')];
+  if (!labels.length || !times.length) return;
+  const updateClocks = (labelText, timeText, seconds) => {
+    labels.forEach((label) => { label.textContent = labelText; });
+    times.forEach((time) => {
+      time.textContent = timeText;
+      time.setAttribute('datetime', `PT${seconds}S`);
+    });
+  };
   const blitz = timers.blitz;
   const complete = completedQuestions.includes('blitz-01');
   const blitzActive = currentStage === 5 && blitz?.startedAt;
@@ -94,14 +101,32 @@ export const renderTimerPanel = ({ timers = {}, completedQuestions = [], current
     ? Math.max(0, blitz.completed ? (blitz.remaining ?? 0) : 90 - Math.floor((Date.now() - blitz.startedAt) / 1000))
     : null;
   if (blitzActive) {
-    label.textContent = complete ? 'Блиц завершён' : 'До конца блица';
-    time.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')} : ${String(remaining % 60).padStart(2, '0')}`;
-    time.setAttribute('datetime', `PT${remaining}S`);
+    updateClocks(
+      complete ? 'Блиц завершён' : 'До конца блица',
+      `${String(Math.floor(remaining / 60)).padStart(2, '0')} : ${String(remaining % 60).padStart(2, '0')}`,
+      remaining,
+    );
     return;
   }
   const elapsed = timers.expedition?.startedAt ? Math.max(0, Math.floor((Date.now() - timers.expedition.startedAt) / 1000)) : 0;
   const expeditionRemaining = Math.max(0, (90 * 60) - elapsed);
-  label.textContent = expeditionRemaining > 0 ? 'До конца экспедиции' : 'Время экспедиции истекло';
-  time.textContent = `${String(Math.floor(expeditionRemaining / 60)).padStart(2, '0')} : ${String(expeditionRemaining % 60).padStart(2, '0')}`;
-  time.setAttribute('datetime', `PT${expeditionRemaining}S`);
+  document.querySelectorAll('.timer, .header-timer').forEach((timerCard) => {
+    timerCard.classList.toggle('is-warning', expeditionRemaining > 5 * 60 && expeditionRemaining <= 15 * 60);
+    timerCard.classList.toggle('is-urgent', expeditionRemaining > 0 && expeditionRemaining <= 5 * 60);
+    timerCard.classList.toggle('is-expired', expeditionRemaining === 0);
+  });
+  const labelText = expeditionRemaining === 0
+    ? 'Время экспедиции истекло'
+    : expeditionRemaining <= 60
+      ? 'Осталась последняя минута'
+      : expeditionRemaining <= 5 * 60
+        ? 'Осталось меньше 5 минут'
+        : expeditionRemaining <= 15 * 60
+          ? 'Осталось меньше 15 минут'
+          : 'До конца экспедиции';
+  updateClocks(
+    labelText,
+    `${String(Math.floor(expeditionRemaining / 60)).padStart(2, '0')} : ${String(expeditionRemaining % 60).padStart(2, '0')}`,
+    expeditionRemaining,
+  );
 };
