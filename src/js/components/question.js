@@ -32,7 +32,11 @@ const createInputControl = (question, initialValue) => {
   }
 
   const config = inputConfig[question.type] || inputConfig.text;
-  const input = document.createElement('input');
+  const input = document.createElement(question.type === 'rubricText' ? 'textarea' : 'input');
+  if (question.type === 'rubricText') {
+    input.rows = 4;
+    input.maxLength = question.rubric.maxLength || 4000;
+  }
   input.id = 'answer';
   input.name = 'answer';
   input.autocomplete = 'off';
@@ -44,15 +48,19 @@ const createInputControl = (question, initialValue) => {
   return input;
 };
 
-export const createQuestionComponent = ({ container, question, initialValue = '', onChange, onSubmit, onHint }) => {
+export const createQuestionComponent = ({ container, question, initialValue = '', onChange, onSubmit, onHint, idPrefix = 'answer' }) => {
   container.innerHTML = '';
   container.noValidate = true;
 
   const label = document.createElement('label');
   label.className = 'sr-only';
-  label.htmlFor = 'answer';
+  label.htmlFor = idPrefix;
   label.textContent = 'Ответ на задание';
   const control = createInputControl(question, initialValue);
+  if (question.type === 'rubricText') {
+    control.id = idPrefix;
+    control.setAttribute('aria-describedby', `${idPrefix}-help ${idPrefix}-status`);
+  }
 
   const submit = document.createElement('button');
   submit.className = 'primary-button';
@@ -63,20 +71,20 @@ export const createQuestionComponent = ({ container, question, initialValue = ''
   hintButton.className = 'hint-button';
   hintButton.type = 'button';
   hintButton.setAttribute('aria-expanded', 'false');
-  hintButton.setAttribute('aria-controls', 'hint');
+  hintButton.setAttribute('aria-controls', idPrefix === 'answer' ? 'hint' : `${idPrefix}-hint`);
   hintButton.innerHTML = `${icon('status-hint')} Нужна подсказка?${icon('navigation-forward', 'hint-toggle')}`;
 
   const help = document.createElement('p');
-  help.id = 'answer-help';
+  help.id = `${idPrefix}-help`;
   help.className = 'sr-only';
   help.textContent = 'После ввода активируйте кнопку проверки ответа.';
   const status = document.createElement('p');
-  status.id = 'answer-status';
+  status.id = `${idPrefix}-status`;
   status.className = 'answer-status';
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
   const hint = document.createElement('div');
-  hint.id = 'hint';
+  hint.id = idPrefix === 'answer' ? 'hint' : `${idPrefix}-hint`;
   hint.className = 'hint';
   hint.tabIndex = -1;
   hint.hidden = true;

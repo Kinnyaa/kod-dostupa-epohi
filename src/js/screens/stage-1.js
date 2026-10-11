@@ -1,4 +1,5 @@
 import { createQuestionComponent } from '../components/question';
+import { createRubricQuestion } from '../components/rubric-question';
 import { validateAnswer } from '../utils/validators';
 import {
   addArtifact,
@@ -15,19 +16,6 @@ const CHOICE_ID = 'rome-02';
 const HYPOTHESIS_ID = 'final-01';
 const ARTIFACT_ID = 'researcher-hypothesis';
 
-const validateHypothesis = (value) => {
-  const text = String(value || '').trim().toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');
-  if (text.length < 30) return { valid: false, message: 'Сформулируйте развёрнутую гипотезу длиной не менее 30 символов.' };
-  const concepts = [
-    /(счет|считать|измер)/,
-    /(знак|символ|инструмент|материал)/,
-    /(удоб|вычисл|расчет|задач)/,
-  ].filter((pattern) => pattern.test(text)).length;
-  return concepts >= 2
-    ? { valid: true, message: '' }
-    : { valid: false, message: 'Свяжите гипотезу хотя бы с двумя идеями: задачи счёта или измерения, доступные знаки и удобство вычислений.' };
-};
-
 export const renderStageOne = ({ root, questionBank, onStateChange }) => {
   const choiceQuestion = questionBank.questions.find(({ id }) => id === CHOICE_ID);
   const hypothesisQuestion = questionBank.questions.find(({ id }) => id === HYPOTHESIS_ID);
@@ -39,7 +27,7 @@ export const renderStageOne = ({ root, questionBank, onStateChange }) => {
       <div class="stage-rules" aria-labelledby="rules-title"><h2 id="rules-title">Правила экспедиции</h2><ol><li>Изучайте запись и справочные материалы.</li><li>Проверяйте ответ явно — пустой ответ не считается попыткой.</li><li>Подсказка помогает, но уменьшает награду на один балл.</li></ol></div>
       <section class="protocol-card" aria-labelledby="protocol-title"><div><p class="protocol-card__label">Повреждённая строка протокола</p><h2 id="protocol-title">Число 99 записано как <strong>IC</strong></h2><p>Архив сообщает, что одно из правил римской системы нарушено. Выберите корректную запись.</p></div><div class="protocol-code" aria-label="Ошибочная запись: I C"><span>I</span><span>C</span><i aria-hidden="true">!</i></div></section>
       <section class="stage-task" aria-labelledby="violation-title"><div class="stage-task__heading"><span>01</span><div><h2 id="violation-title">Найдите нарушение</h2><p>${choiceQuestion.prompt}</p></div></div><form class="answer-form stage-one__choice"></form></section>
-      <section class="stage-task" aria-labelledby="hypothesis-title"><div class="stage-task__heading"><span>02</span><div><h2 id="hypothesis-title">Гипотеза исследователя</h2><p>${hypothesisQuestion.prompt}</p></div></div><form class="hypothesis-form" novalidate><label for="hypothesis">Ваша гипотеза</label><textarea id="hypothesis" rows="4" placeholder="Например: системы записи различались, потому что…" aria-describedby="hypothesis-help hypothesis-status"></textarea><p id="hypothesis-help">Упомяните задачи людей, доступные знаки или удобство вычислений.</p><button class="primary-button" type="submit"><span class="button-label">Сохранить гипотезу</span>${icon('navigation-forward')}</button><p id="hypothesis-status" class="answer-status" role="status" aria-live="polite"></p></form></section>
+      <section class="stage-task" aria-labelledby="hypothesis-title"><div class="stage-task__heading"><span>02</span><div><h2 id="hypothesis-title">Гипотеза исследователя</h2><p>${hypothesisQuestion.prompt}</p></div></div><form class="hypothesis-form" novalidate></form></section>
       <section class="stage-artifact ${state.artifacts.includes(ARTIFACT_ID) ? 'is-unlocked' : ''}" aria-live="polite"><span class="stage-artifact__icon" aria-hidden="true">${state.artifacts.includes(ARTIFACT_ID) ? artifactImage('scroll-researcher') : icon('status-locked')}</span><div><p>Артефакт этапа</p><h2>Свиток исследователя</h2><span>${state.artifacts.includes(ARTIFACT_ID) ? 'Получен — этап 2 открыт' : 'Выполните оба задания, чтобы сохранить артефакт'}</span></div></section>
     </section>`;
 
@@ -85,26 +73,11 @@ export const renderStageOne = ({ root, questionBank, onStateChange }) => {
   }
 
   const hypothesisForm = root.querySelector('.hypothesis-form');
-  const hypothesis = root.querySelector('#hypothesis');
-  const hypothesisStatus = root.querySelector('#hypothesis-status');
-  const hypothesisButton = hypothesisForm.querySelector('button');
-  hypothesis.value = state.answers[HYPOTHESIS_ID] || '';
-  hypothesis.addEventListener('input', () => { updateAnswer(HYPOTHESIS_ID, hypothesis.value); hypothesisStatus.textContent = ''; hypothesis.removeAttribute('aria-invalid'); });
-  hypothesisForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const result = validateHypothesis(hypothesis.value);
-    if (!result.valid) { hypothesis.setAttribute('aria-invalid', 'true'); hypothesisStatus.textContent = result.message; hypothesis.focus(); return; }
-    updateAnswer(HYPOTHESIS_ID, hypothesis.value);
-    registerAttempt(HYPOTHESIS_ID);
-    completeQuestion(hypothesisQuestion);
-    hypothesisStatus.textContent = 'Гипотеза принята и сохранена в архиве.';
-    hypothesisButton.querySelector('.button-label').textContent = 'Гипотеза сохранена';
-    finishStageIfReady();
+  const hypothesisUi = createRubricQuestion({
+    container: hypothesisForm,
+    question: hypothesisQuestion,
+    onAccepted: finishStageIfReady,
   });
-  if (state.completedQuestions.includes(HYPOTHESIS_ID)) {
-    hypothesisStatus.textContent = 'Гипотеза принята и сохранена в архиве.';
-    hypothesisButton.querySelector('.button-label').textContent = 'Гипотеза сохранена';
-  }
 
   function finishStageIfReady() {
     const latest = getState();
@@ -118,4 +91,5 @@ export const renderStageOne = ({ root, questionBank, onStateChange }) => {
   }
 
   root.querySelector('#quest-title')?.focus({ preventScroll: true });
+  return hypothesisUi.dispose;
 };

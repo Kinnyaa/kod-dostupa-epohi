@@ -167,7 +167,7 @@ function renderApp() {
   stageNavigation.hidden = false;
 
   const shared = { root: screenRoot, questionBank, onStateChange: renderApp };
-  if (state.currentStage === 1) renderStageOne(shared);
+  if (state.currentStage === 1) cleanupScreen = renderStageOne(shared) || (() => {});
   else if (state.currentStage === 2) renderStageTwo(shared);
   else if (state.currentStage === 3) renderStageThree(shared);
   else if (state.currentStage === 4) renderStageFour(shared);

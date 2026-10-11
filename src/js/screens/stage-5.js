@@ -1,4 +1,5 @@
 import { createQuestionComponent } from '../components/question';
+import { createRubricQuestion } from '../components/rubric-question';
 import { validateAnswer } from '../utils/validators';
 import {
   addArtifact,
@@ -21,12 +22,6 @@ const FINAL_IDS = ['final-02', 'final-03'];
 const ARTIFACT_ID = 'core-patch';
 const BLITZ_ID = 'blitz-01';
 const BLITZ_DURATION = 90;
-const NON_POSITIONAL_OPTIONS = [
-  'Знаки легко читать и складывать в короткой записи, но большие числа получаются громоздкими и неудобными для вычислений.',
-  'Любое число записывается одним знаком, но значение знака меняется в зависимости от его позиции.',
-  'Система позволяет удобно записывать дроби, но в ней нельзя использовать целые числа.',
-];
-const NON_POSITIONAL_ANSWER = NON_POSITIONAL_OPTIONS[0];
 const blitzQuestions = [
   { prompt: 'Какая запись числа 99 является канонической?', options: ['IC', 'XCIX', 'LXXXXVIIII'], answer: 'XCIX' },
   { prompt: 'Какое основание использовала вавилонская позиционная система?', options: ['10', '20', '60'], answer: '60' },
@@ -37,25 +32,6 @@ const blitzQuestions = [
 const mandatoryIds = ['rome-02', 'final-01', 'egypt-01', 'babylon-01', 'rome-01', 'rus-01', 'cross-01', 'cross-02', 'cross-03', 'cross-04', 'practical-01', 'final-02', 'final-03', BLITZ_ID];
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-const normalize = (value) => String(value || '').toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');
-
-const validateRubric = (id, value) => {
-  if (id === 'final-03') {
-    const valid = Boolean(String(value || '').trim());
-    return { valid, correct: value === NON_POSITIONAL_ANSWER, message: valid ? '' : 'Выберите один вариант ответа.' };
-  }
-  const text = normalize(value);
-  if (text.trim().length < 25) return { valid: false, correct: false, message: 'Дайте развёрнутый ответ минимум из нескольких предложений.' };
-  if (id === 'final-02') {
-    const correct = /255/.test(text) && /11111111/.test(text) && /cf/.test(text) && /(значен|одно и то же|не меня)/.test(text);
-    return { valid: true, correct, message: '' };
-  }
-  const example = /(егип|рим)/.test(text);
-  const advantage = /(прост|легк|нагляд|удоб.*чита|понят)/.test(text);
-  const limitation = /(громозд|неудоб|длин|сложн.*вычис|нет нул|непозицион)/.test(text);
-  return { valid: true, correct: example && advantage && limitation, message: '' };
-};
-
 const timerRemaining = (timer) => {
   if (!timer?.startedAt) return BLITZ_DURATION;
   if (timer.completed) return Math.max(0, timer.remaining ?? 0);
@@ -101,15 +77,23 @@ export const renderStageFive = ({ root, questionBank, onStateChange }) => {
   root.querySelectorAll('.council-tab').forEach((tab) => tab.addEventListener('click', () => { setActiveQuestion(5, tab.dataset.question); onStateChange(); }));
 
   let ui;
+  let disposeQuestion = () => {};
   const form = root.querySelector('.council-form');
+  if (question.type === 'rubricText') {
+    ui = createRubricQuestion({ container: form, question, onAccepted: () => {
+      const next = FINAL_IDS.find((id) => !getState().completedQuestions.includes(id));
+      if (next) setActiveQuestion(5, next);
+      onStateChange();
+    } });
+    disposeQuestion = ui.dispose;
+  } else {
   const setFormState = (name, message) => { form.dataset.state = name; ui.status.textContent = message; ui.control?.setAttribute('aria-invalid', name === 'error' ? 'true' : 'false'); };
   const showHint = (save = true) => { ui.hint.innerHTML = `<strong>Подсказка:</strong> ${question.hint}`; ui.hint.hidden = false; ui.hintButton.setAttribute('aria-expanded', 'true'); if (save) openHint(activeId); };
-  const renderedQuestion = activeId === 'final-03'
-    ? { ...question, type: 'singleChoice', options: NON_POSITIONAL_OPTIONS }
-    : { ...question, type: 'text' };
-  ui = createQuestionComponent({ container: form, question: renderedQuestion, initialValue: state.answers[activeId] || '', onChange: (value) => { updateAnswer(activeId, value); if (form.dataset.state !== 'success') setFormState('', ''); }, onHint: () => { const opening = ui.hint.hidden; ui.hint.hidden = !opening; ui.hintButton.setAttribute('aria-expanded', String(opening)); if (opening) showHint(); }, onSubmit: (value) => { const result = validateRubric(activeId, value); if (!result.valid) { setFormState('error', result.message); return; } updateAnswer(activeId, value); const attempt = registerAttempt(activeId); ui.submit.disabled = true; ui.submit.classList.add('is-loading'); ui.submit.querySelector('.button-label').textContent = 'Проверяем'; window.setTimeout(() => { if (result.correct) { completeQuestion(question); const next = FINAL_IDS.find((id) => !getState().completedQuestions.includes(id)); if (next) setActiveQuestion(5, next); onStateChange(); } else { if (attempt === 1) showHint(); setFormState('error', attempt >= 2 ? `Ответ пока неверный. ${question.errorExplanation}` : 'Выбран неверный вариант. Открыта подсказка.'); ui.submit.disabled = false; ui.submit.classList.remove('is-loading'); ui.submit.querySelector('.button-label').textContent = 'Проверить снова'; } }, 450); } });
+  const renderedQuestion = question;
+  ui = createQuestionComponent({ container: form, question: renderedQuestion, initialValue: state.answers[activeId] || '', onChange: (value) => { updateAnswer(activeId, value); if (form.dataset.state !== 'success') setFormState('', ''); }, onHint: () => { const opening = ui.hint.hidden; ui.hint.hidden = !opening; ui.hintButton.setAttribute('aria-expanded', String(opening)); if (opening) showHint(); }, onSubmit: (value) => { const result = validateAnswer(question, value); if (!result.valid) { setFormState('error', result.message); return; } updateAnswer(activeId, value); const attempt = registerAttempt(activeId); ui.submit.disabled = true; ui.submit.classList.add('is-loading'); ui.submit.querySelector('.button-label').textContent = 'Проверяем'; window.setTimeout(() => { if (result.correct) { completeQuestion(question); const next = FINAL_IDS.find((id) => !getState().completedQuestions.includes(id)); if (next) setActiveQuestion(5, next); onStateChange(); } else { if (attempt === 1) showHint(); setFormState('error', attempt >= 2 ? `Ответ пока неверный. ${question.errorExplanation}` : 'Выбран неверный вариант. Открыта подсказка.'); ui.submit.disabled = false; ui.submit.classList.remove('is-loading'); ui.submit.querySelector('.button-label').textContent = 'Проверить снова'; } }, 450); } });
   if (state.openedHints.includes(activeId)) showHint(false);
   if (state.completedQuestions.includes(activeId)) { setFormState('success', 'Вывод принят Советом и добавлен в итоговый протокол.'); ui.submit.querySelector('.button-label').textContent = 'Ответ принят'; }
+  }
 
   root.querySelector('.blitz-start')?.addEventListener('click', () => {
     updateAnswer(BLITZ_ID, { index: 0, correct: 0, selections: [] });
@@ -141,7 +125,7 @@ export const renderStageFive = ({ root, questionBank, onStateChange }) => {
     tick(); interval = window.setInterval(tick, 250);
   }
   root.querySelector('#quest-title')?.focus({ preventScroll: true });
-  return () => { if (interval) window.clearInterval(interval); };
+  return () => { disposeQuestion(); if (interval) window.clearInterval(interval); };
 };
 
 const lostPoints = (state, question) => {
