@@ -103,6 +103,41 @@ async function main() {
     assert.ok(await page.locator('.rubric-form button[type=submit]').isDisabled());
     checks += 1;
     await context.close();
+    // Decorative marks and placeholders must not disclose an unsolved answer.
+    for (const width of [375, 1280]) {
+      for (const task of [
+        { stage: 2, id: 'rome-01', pending: '753', answer: 'DCCLIII', mark: '.archive-question__visual > span', form: '.stage-two__form' },
+        { stage: 3, id: 'rome-01', pending: '753', answer: 'DCCLIII', mark: '.compiler-console__mark > span', form: '.stage-three__form' },
+        { stage: 3, id: 'cross-01', pending: '753', answer: '1011110001', revealed: '1011110001₂', mark: '.compiler-console__mark > span', form: '.stage-three__form' },
+        { stage: 3, id: 'cross-02', pending: '60', answer: '1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60', revealed: '12', mark: '.compiler-console__mark > span', form: '.stage-three__form' },
+      ]) {
+        const taskContext = await browser.newContext({ viewport: { width, height: 900 } });
+        const taskPage = await taskContext.newPage();
+        taskPage.on('pageerror', (error) => errors.push(String(error)));
+        await taskPage.goto(`http://127.0.0.1:${server.address().port}/`);
+        const initial = { ...stateFor(task.stage), activeQuestionByStage: { [task.stage]: task.id } };
+        await taskPage.evaluate(({ key, state }) => localStorage.setItem(key, JSON.stringify(state)), { key, state: initial });
+        await taskPage.reload();
+        assert.equal(await taskPage.locator(task.mark).innerText(), task.pending);
+        const input = taskPage.locator(`${task.form} input[name=answer]`);
+        assert.ok(!(await input.getAttribute('placeholder')).includes(task.answer));
+        if (task.id === 'rome-01') assert.ok(!(await taskPage.locator('.quest-card').innerText()).includes('DCCLIII'));
+        if (task.stage === 2) {
+          assert.equal(await taskPage.locator('[data-question="rome-01"] .civilization-tab__status').innerText(), '753');
+          await taskPage.locator('.archive-question').screenshot({ path: path.join(output, `roman-unsolved-${width}.png`) });
+        }
+        await input.fill(task.answer);
+        await taskPage.locator(`${task.form} button[type=submit]`).click();
+        await taskPage.waitForFunction(({ key, id }) => JSON.parse(localStorage.getItem(key)).completedQuestions.includes(id), { key, id: task.id });
+        await taskPage.locator(`[data-question="${task.id}"]`).click();
+        assert.equal(await taskPage.locator(task.mark).innerText(), task.revealed || task.answer);
+        const finalState = await taskPage.evaluate((key) => JSON.parse(localStorage.getItem(key)), key);
+        assert.equal(finalState.score, 5);
+        assert.equal(finalState.attempts[task.id], 1);
+        checks += 1;
+        await taskContext.close();
+      }
+    }
     assert.deepEqual(errors, []);
     console.log(JSON.stringify({ passed: checks, widths: [320, 375, 768, 1280], screenshots: output, pageErrors: errors }, null, 2));
   } finally { await browser.close(); }

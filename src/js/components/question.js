@@ -2,7 +2,7 @@ import { icon } from './icons';
 
 const inputConfig = {
   integer: { inputmode: 'numeric', pattern: '[-+0-9 ]*', placeholder: 'Введите целое число…' },
-  roman: { inputmode: 'text', pattern: '[MDCLXVImdclxvi ]*', placeholder: 'Например, DCCLIII' },
+  roman: { inputmode: 'text', pattern: '[MDCLXVImdclxvi ]*', placeholder: 'Введите римское число…' },
   binary: { inputmode: 'numeric', pattern: '[01 ₂]*', placeholder: 'Введите двоичное число…' },
   listOfIntegers: { inputmode: 'numeric', placeholder: 'Например: 1, 2, 3' },
   text: { inputmode: 'text', placeholder: 'Введите ответ…' },

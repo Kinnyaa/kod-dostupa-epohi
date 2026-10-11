@@ -14,9 +14,9 @@ import { artifactImage, icon } from '../components/icons';
 
 const ARTIFACT_ID = 'translation-table';
 const tasks = [
-  { id: 'rome-01', short: 'Римская запись', mark: 'DCCLIII', label: '753₁₀ → римская система' },
-  { id: 'cross-01', short: 'Двоичная запись', mark: '1011110001₂', label: '753₁₀ → двоичная система' },
-  { id: 'cross-02', short: 'Делители 60', mark: '12', label: 'Найти все положительные делители' },
+  { id: 'rome-01', short: 'Римская запись', mark: 'DCCLIII', pendingMark: '753', label: '753₁₀ → римская система' },
+  { id: 'cross-01', short: 'Двоичная запись', mark: '1011110001₂', pendingMark: '753', label: '753₁₀ → двоичная система' },
+  { id: 'cross-02', short: 'Делители 60', mark: '12', pendingMark: '60', label: 'Найти все положительные делители' },
   { id: 'cross-03', short: 'Сравнение', mark: '60 : 100', label: 'Сравнить количество делителей' },
 ];
 
@@ -48,7 +48,7 @@ export const renderStageThree = ({ root, questionBank, onStateChange }) => {
     <header><p class="stage-kicker">Этап 3</p><h1 id="quest-title" tabindex="-1">Компиляция</h1><p class="eyebrow">Переводим данные между системами</p></header>
     <p class="intro">Проверьте две записи числа 753, исследуйте делители и соберите таблицу корректных переводов.</p>
     <div class="compiler-steps" role="tablist" aria-label="Задания компиляции">${tasks.map((task, index) => { const complete = state.completedQuestions.includes(task.id); const active = task.id === activeId; return `<button type="button" role="tab" aria-selected="${active}" class="compiler-step ${active ? 'is-active' : ''} ${complete ? 'is-complete' : ''}" data-question="${task.id}"><span>${complete ? '✓' : index + 1}</span><strong>${task.short}</strong><small>${task.label}</small></button>`; }).join('')}</div>
-    <section class="compiler-console" aria-labelledby="compiler-question"><div class="compiler-console__mark"><span>${activeTask.mark}</span><small>Контрольная операция ${Math.min(completedCount + (state.completedQuestions.includes(activeId) ? 0 : 1), 4)} из 4</small></div><div class="compiler-console__body"><h2 id="compiler-question">${question.prompt}</h2><form class="answer-form stage-three__form"></form></div></section>
+    <section class="compiler-console" aria-labelledby="compiler-question"><div class="compiler-console__mark"><span>${state.completedQuestions.includes(activeId) ? activeTask.mark : activeTask.pendingMark || activeTask.mark}</span><small>Контрольная операция ${Math.min(completedCount + (state.completedQuestions.includes(activeId) ? 0 : 1), 4)} из 4</small></div><div class="compiler-console__body"><h2 id="compiler-question">${question.prompt}</h2><form class="answer-form stage-three__form"></form></div></section>
     ${renderTranslationTable(state)}
     ${renderDivisorComparison(state)}
     <section class="stage-artifact ${artifactUnlocked ? 'is-unlocked' : ''}" aria-live="polite"><span class="stage-artifact__icon" aria-hidden="true">${artifactUnlocked ? artifactImage('translation-tablet') : icon('status-locked')}</span><div><p>Артефакт этапа</p><h2>Табличка переводов</h2><span>${artifactUnlocked ? 'Проверена — этап 4 открыт' : `Проверено операций: ${completedCount} из 4`}</span></div></section>
