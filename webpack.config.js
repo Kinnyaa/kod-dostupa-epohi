@@ -5,7 +5,6 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
 const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
-const {extendDefaultPlugins} = require("svgo");
 
 const json = require('./package.json');
 const project_name = json.name;
@@ -38,10 +37,12 @@ const optimization = () => {
                             [
                                 "svgo",
                                 {
-                                    plugins: extendDefaultPlugins([
+                                    plugins: [
                                         {
-                                            name: "removeViewBox",
-                                            active: false,
+                                            name: "preset-default",
+                                            params: {
+                                                overrides: { removeViewBox: false },
+                                            },
                                         },
                                         {
                                             name: "addAttributesToSVGElement",
@@ -49,7 +50,7 @@ const optimization = () => {
                                                 attributes: [{xmlns: "http://www.w3.org/2000/svg"}],
                                             },
                                         },
-                                    ]),
+                                    ],
                                 },
                             ],
                         ],

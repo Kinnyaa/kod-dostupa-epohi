@@ -1,1 +1,44 @@
-@import "~normalize.css";
+/*
+ * Небольшой reset вместо normalize.css. Старый normalize содержит
+ * браузерные хаки, которые некоторые CSS-парсеры считают ошибками.
+ */
+html {
+  line-height: 1.15;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: block;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  color: inherit;
+  font: inherit;
+}
+
+button,
+input {
+  overflow: visible;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+fieldset {
+  margin: 0;
+  padding: .35em .75em .625em;
+}
+
+[hidden] {
+  display: none !important;
+}
